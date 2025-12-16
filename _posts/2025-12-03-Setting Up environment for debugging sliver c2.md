@@ -12,7 +12,7 @@ The steps are based on the [HN Security guide](https://hnsecurity.it/blog/custom
 
 We will set up:
 
-- **Linux machine (ubuntu) for**  debugging Sliver server and client
+- **Linux machine (ubuntu)** for debugging Sliver server and client
 - **Windows machine** for debugging the Sliver implant
 
 
@@ -30,7 +30,6 @@ You’ll install Visual Studio Code and the Go extension. When VSCode asks to in
 
 ### **Install Protobuf Toolchain**
 To modify `.proto` files and generate `.pb.go` files, install:
-Sliver requires:
 - `protoc` v3.19.4 or later
 - `protoc-gen-go` v1.27.1
 - `protoc-gen-go-grpc` v1.2.0
