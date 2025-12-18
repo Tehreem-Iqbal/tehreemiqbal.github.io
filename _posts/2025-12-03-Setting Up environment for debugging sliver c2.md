@@ -7,28 +7,25 @@ tags: [sliver c2, c2 debugging]
 
 ## **Overview**
 
-This post walks through setting up a complete debugging workflow for the Sliver C2 framework. It covers server-side debugging on Linux and implant debugging on a Windows target, all using VS Code with Go and Delve.
-The steps are based on the [HN Security guide](https://hnsecurity.it/blog/customizing-sliver-part-1/), combined with my own experimentation and notes while building a reliable Sliver debugging environment.
+This post walks through how to set up a debugging environment for Sliver C2 framework. It will cover server-side debugging on Linux and implant debugging on a Windows target, using VS Code with Go and Delve.
 
-We will set up:
+While building this setup, I followed the debugging walkthrough by [HN Security guide](https://hnsecurity.it/blog/customizing-sliver-part-1/) on customizing and debugging Sliver.
+
+We’ll cover:
 
 - **Linux machine (ubuntu)** for debugging Sliver server and client
 - **Windows machine** for debugging the Sliver implant
 
 
 ## **Server-Side Debugging Environment**
-
 #### **Install Go**
-
 ```bash
 sudo apt update
 sudo apt install golang
 ```
 
-Verify that Go is installed correctly with the `go version` command.
-You’ll install Visual Studio Code and the Go extension. When VSCode asks to install additional Go tools (IntelliSense, linters, and Delve), allow it.
-
-### **Install Protobuf Toolchain**
+Verify that Go is installed correctly with the `go version` command. Also install the go extension on vscode.
+#### **Install Protobuf Toolchain**
 To modify `.proto` files and generate `.pb.go` files, install:
 - `protoc` v3.19.4 or later
 - `protoc-gen-go` v1.27.1
@@ -76,13 +73,13 @@ go install github.com/go-delve/delve/cmd/dlv@latest
 
 ### **Configure VSCode**
 The following VSCode configurations ensure Sliver builds with the correct tags and debug symbols.
-Create `.vscode/launch.json` file and add the following configuration to it: 
+Create `.vscode/launch.json` file and add the following configuration: 
 ```json
 {
   "version": "0.2.0",
   "configurations": [
     {
-      "name": "Launch Sliver Client",
+      "name": "Launch client",
       "type": "go",
       "request": "launch",
       "mode": "debug",
@@ -91,7 +88,7 @@ Create `.vscode/launch.json` file and add the following configuration to it:
       "console": "integratedTerminal"
     },
     {
-      "name": "Launch Sliver Server",
+      "name": "Launch server",
       "type": "go",
       "request": "launch",
       "mode": "debug",
@@ -120,7 +117,7 @@ Create `.vscode/settings.json`:
 ```
 This sets environment variables and Delve configurations necessary for debugging.
 
-Inside VSCode run sliver server in debug mode by clicking Run and **Debug>Launch server**
+Inside VSCode run sliver server in debug mode by clicking Run and **Debug > Launch server**
 
 ![Image](/assets/images/Posts/Setting%20Up%20debugging%20env%20for%20sliver/demo01.png)
 
@@ -129,29 +126,29 @@ A new terminal windows will open running sliver server:
 
 In the Sliver console, create a new operator and enable multiplayer mode:
 ```shell
-sliver > new-operator -l 127.0.0.1 -n me -P all
+sliver > new-operator -l 127.0.0.1 -n aris -P all
 
 [*] Generating new client certificate, please wait ... 
-[*] Saved new client config to: /home/tehreem/sliver/server/aris_127.0.0.1.cfg 
+[*] Saved new client config to: /home/aris/sliver/server/aris_127.0.0.1.cfg 
 
 sliver > multiplayer
 
 [*] Multiplayer mode enabled
 ```
 
-I have created an operator named **ari**. Import the client configuration file in the Sliver client:
+I have created an operator named **aris**. Import the client configuration file in the Sliver client:
 ```
 ~/sliver/sliver-client import ~/sliver/server/aris_127.0.0.1.cfg 
 ```
 
-This will copy place the operator config in  ~/.sliver-client/configs/
+This will copy place the operator config in  ~/.sliver-client/configs.
 Now, Run and **Debug>Launch client**
 ![Image](/assets/images/Posts/Setting%20Up%20debugging%20env%20for%20sliver/demo03.png)
 
 ## **Debugging Implants on Windows**
 To debug implants you need:
 - Go and Delve installed on Windows target
-- A Sliver implant generated with debug symbols
+- A sliver implant generated with debug symbols
 
 
 #### **Install Delve on Windows** 
@@ -180,11 +177,11 @@ sliver > http --lhost 192.168.0.106 --lport 8080
 sliver > 
 ```
 
-Sliver will store the implant source in: `~/.sliver/slivers/windows/amd64/<GENERATED IMPANT NAME>/src`. In my case it has stored it in `~/.sliver/slivers/windows/amd64/ROUND_OPIUM/src`. Open the implant source code folder in a new vscode windows.
+Sliver will store the implant source in: `~/.sliver/slivers/windows/amd64/<GENERATED IMPANT NAME>/src`. In this case it has stored it in `~/.sliver/slivers/windows/amd64/ROUND_OPIUM/src`. Open the implant source code folder in a new vscode windows.
 
 #### **Configure VSCode for Remote Debugging**
 
-In `.vscode/launch.json` add:
+Under `src/` folder, create `.vscode/launch.json` and add the following configuration:
 ```json
 {
     "name": "Debug Implant",
@@ -197,12 +194,10 @@ In `.vscode/launch.json` add:
 }
 ```
 Replace:
-
-- `REMOTE_HOST` with your Windows machine (victim) IP
+- `REMOTE_HOST` with your Windows machine (victim) IP running dlv debugger 
 - `REMOTE_PORT` with port you will run Delve on
 
 In `.vscode/settings.json` add:
-
 ```json
 {
     "go.toolsEnvVars": {
@@ -211,7 +206,6 @@ In `.vscode/settings.json` add:
 }
 ```
 
-Then, attach VSCode from the Linux machine using the configuration above.
 #### Run Delve Server on Windows
 Transfer the implant to victim machine, navigate to the directory containing the generated implant and start dlv:
 ```cmd
@@ -228,7 +222,7 @@ Toggle a breakpoint anywhere in implant code you want to debug. Here I have plac
 
 ![Image](/assets/images/Posts/Setting%20Up%20debugging%20env%20for%20sliver/demo05.png)
 
-To debug the server, place the breakpoint inside `client/command/info/info.go` and run info command and breakpoint will hit:
+To debug the server, place the breakpoint inside `sliver/client/command/info/info.go` and run info command and breakpoint will hit:
 ![Image](/assets/images/Posts/Setting%20Up%20debugging%20env%20for%20sliver/demo06.png)
 
 
