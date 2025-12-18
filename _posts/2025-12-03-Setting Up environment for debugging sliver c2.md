@@ -116,7 +116,7 @@ Create `.vscode/settings.json`:
 ```
 This sets environment variables and Delve configurations necessary for debugging.
 
-Inside VSCode run sliver server in debug mode by clicking Run and **Debug > Launch server**
+Inside VSCode run sliver server in debug mode by clicking **Run and Debug > Launch server**
 
 ![Image](/assets/images/Posts/Setting%20Up%20debugging%20env%20for%20sliver/demo01.png)
 
@@ -141,7 +141,7 @@ Here, I have created an operator named **aris**. Import the client configuration
 ```
 
 This will copy the operator config in  `~/.sliver-client/configs`.
-Now, Run and **Debug>Launch client**
+Now, **Run and Debug>Launch client**
 ![Image](/assets/images/Posts/Setting%20Up%20debugging%20env%20for%20sliver/demo03.png)
 
 ## **Debugging Implants on Windows**
@@ -217,7 +217,7 @@ In my setup, the Delve server will run on the Windows machine at 192.168.0.109:7
 
 ![Image](/assets/images/Posts/Setting%20Up%20debugging%20env%20for%20sliver/demo08.png)
 
-Attach VSCode from the Linux machine using the above configuration. Go to Run and **Debug >Debug implant** to start debugging the implant. If everything is configured correctly, you should see the connection appear on your C2 server:
+On Linux machine, inside vscode go to **Run and Debug >Debug implant** to start debugging the implant. If everything is configured correctly, you should see the connection appear on your C2 server:
 
 ![Image](/assets/images/Posts/Setting%20Up%20debugging%20env%20for%20sliver/demo07.png)
 Toggle a breakpoint anywhere in implant code you want to debug. Here I have placed the breadkpoint inside `src/github.com/sliver/implant/sliver/version/version_windows.go`. When you start the implant, you can see in VSCode the breakpoint got hit: 
