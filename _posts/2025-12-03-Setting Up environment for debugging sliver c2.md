@@ -40,11 +40,8 @@ Sliver have their [documentation](https://sliver.sh/docs?name=Compile+from+Sourc
 First dowload your platform's version of [protoc](https://github.com/protocolbuffers/protobuf/releases/latest) and extract it. Here it is installed under `/opt/protoc`.
 ```bash
 wget https://github.com/protocolbuffers/protobuf/releases/download/v3.19.4/protoc-3.19.4-linux-x86_64.zip -O /tmp/protoc.zip
-unzip /tmp/protoc.zip -d /opt/protoc
-```
-Add protoc to PATH:
-```bash
-echo 'export PATH=/opt/protoc/bin:$PATH' >> ~/.bashrc
+unzip /tmp/protoc.zip -d -d $HOME/.local
+echo 'export PATH=$PATH:$HOME/.local/bin' >> ~/.bashrc 
 source ~/.bashrc
 ```
 Verify:
@@ -90,7 +87,7 @@ Create `.vscode/launch.json` file and add the following configuration to it:
       "request": "launch",
       "mode": "debug",
       "program": "${workspaceFolder}/client",
-      "buildFlags": "-tags osusergo,netgo,cgosqlite,sqlite_omit_load_extension,client -ldflags='-X github.com/bishopfox/sliver/client/version.Version=1.6.0'",
+      "buildFlags": "-tags osusergo,netgo,cgosqlite,sqlite_omit_load_extension,client -ldflags='-X github.com/bishopfox/sliver/client/version.Version=1.5.39'",
       "console": "integratedTerminal"
     },
     {
@@ -99,7 +96,7 @@ Create `.vscode/launch.json` file and add the following configuration to it:
       "request": "launch",
       "mode": "debug",
       "program": "${workspaceFolder}/server",
-      "buildFlags": "-tags osusergo,netgo,cgosqlite,go_sqlite,server -ldflags='-X github.com/bishopfox/sliver/client/version.Version=1.6.0'",
+      "buildFlags": "-tags osusergo,netgo,cgosqlite,go_sqlite,server -ldflags='-X github.com/bishopfox/sliver/client/version.Version=1.5.39'",
       "console": "integratedTerminal"
     }
   ]
@@ -135,16 +132,16 @@ In the Sliver console, create a new operator and enable multiplayer mode:
 sliver > new-operator -l 127.0.0.1 -n me -P all
 
 [*] Generating new client certificate, please wait ... 
-[*] Saved new client config to: /home/tehreem/sliver/server/me_127.0.0.1.cfg 
+[*] Saved new client config to: /home/tehreem/sliver/server/aris_127.0.0.1.cfg 
 
 sliver > multiplayer
 
 [*] Multiplayer mode enabled
 ```
 
-I have created an operator named **me**. Import the client configuration file in the Sliver client:
+I have created an operator named **ari**. Import the client configuration file in the Sliver client:
 ```
-~/sliver/sliver-client import ~/sliver/server/me_127.0.0.1.cfg 
+~/sliver/sliver-client import ~/sliver/server/aris_127.0.0.1.cfg 
 ```
 
 This will copy place the operator config in  ~/.sliver-client/configs/
@@ -158,11 +155,9 @@ To debug implants you need:
 
 
 #### **Install Delve on Windows** 
-Ensure `$GOPATH\bin` is in your Windows PATH:
 ```powershell
 go install github.com/go-delve/delve/cmd/dlv@latest
 ```
-Ensure `$GOPATH\bin` is in your Windows PATH.
 
 #### **Generate a Debuggable Implant**
 Generate implant and start a listener:
@@ -170,14 +165,14 @@ Generate implant and start a listener:
 ```shell
 Use " generate [command] --help" for more information about a command.
 
-sliver > generate --http 192.168.0.113:8080  --debug
+sliver > generate --http 192.168.0.106:8080  --debug
 
 [*] Generating new windows/amd64 implant binary
 [*] Build completed in 17s
-[*] Implant saved to ~/sliver/client/SMILING_HYENA.exe
+[*] Implant saved to ~/sliver/client/ROUND_OPIUM.exe
 
 
-sliver > http --lhost 192.168.0.113 --lport 8080
+sliver > http --lhost 192.168.0.106 --lport 8080
 
 [*] Starting HTTP :8080 listener ...
 [*] Successfully started job #2
@@ -185,9 +180,10 @@ sliver > http --lhost 192.168.0.113 --lport 8080
 sliver > 
 ```
 
-Sliver will store the implant source in: `~/.sliver/slivers/windows/amd64/<GENERATED IMPANT NAME>/src`. In my case it has stored it in `~/.sliver/slivers/windows/amd64/SPECIAL_NOTICE/src`. Open the implant source code folder in a new vscode windows.
+Sliver will store the implant source in: `~/.sliver/slivers/windows/amd64/<GENERATED IMPANT NAME>/src`. In my case it has stored it in `~/.sliver/slivers/windows/amd64/ROUND_OPIUM/src`. Open the implant source code folder in a new vscode windows.
 
 #### **Configure VSCode for Remote Debugging**
+
 In `.vscode/launch.json` add:
 ```json
 {
@@ -222,11 +218,18 @@ Transfer the implant to victim machine, navigate to the directory containing the
 dlv exec --api-version=2 --headless --listen REMOTE_HOST:REMOTE_PORT --log .\<GENERATED IMPLANT>.exe
 ```
 
-![Image](/assets/images/Posts/Setting%20Up%20debugging%20env%20for%20sliver/demo05.png)
-
+![Image](/assets/images/Posts/Setting%20Up%20debugging%20env%20for%20sliver/demo04.png)
 In my setup, the Delve server will run on the Windows machine at 192.168.0.108:7077. Update `launch.json` accordingly.
 
-Attach VSCode from the Linux machine using the configuration above. Go to Run and **Debug >Debug implant** to start debugging the implant. If everything is configured correctly, you should see the connection appear on your C2 server.
+Attach VSCode from the Linux machine using the above configuration. Go to Run and **Debug >Debug implant** to start debugging the implant. If everything is configured correctly, you should see the connection appear on your C2 server:
+
+![Image](/assets/images/Posts/Setting%20Up%20debugging%20env%20for%20sliver/demo07.png)
+Toggle a breakpoint anywhere in implant code you want to debug. Here I have placed the breadkpoint inside `src/github.com/sliver/implant/sliver/version/version_windows.go`. When you start the implant, you can see in VSCode the breakpoint got hit: 
+
+![Image](/assets/images/Posts/Setting%20Up%20debugging%20env%20for%20sliver/demo05.png)
+
+To debug the server, place the breakpoint inside `client/command/info/info.go` and run info command and breakpoint will hit:
+![Image](/assets/images/Posts/Setting%20Up%20debugging%20env%20for%20sliver/demo06.png)
 
 
 With this setup, you can debug both Sliver’s server logic and implant behavior in real time. This workflow is especially useful when modifying implants, experimenting with transports, or understanding Sliver internals.
